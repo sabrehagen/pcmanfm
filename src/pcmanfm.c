@@ -73,6 +73,11 @@ static char* window_role = NULL;
 
 static int n_pcmanfm_ref = 0;
 
+static void on_gtk_theme_changed(GtkSettings *settings, GParamSpec *pspec, gpointer data)
+{
+    gtk_style_context_reset_widgets(gdk_screen_get_default());
+}
+
 static GOptionEntry opt_entries[] =
 {
     /* options only acceptable by first pcmanfm instance. These options are not passed through IPC */
@@ -253,6 +258,12 @@ int main(int argc, char** argv)
     config = fm_app_config_new(); /* this automatically load libfm config file. */
 
     fm_gtk_init(config);
+
+    /* Reload GTK3 styles in existing windows when the theme changes */
+    g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
+                     G_CALLBACK(on_gtk_theme_changed), NULL);
+    g_signal_connect(gtk_settings_get_default(), "notify::gtk-icon-theme-name",
+                     G_CALLBACK(on_gtk_theme_changed), NULL);
 
 #if FM_CHECK_VERSION(1, 2, 0)
     /* register our modules */
